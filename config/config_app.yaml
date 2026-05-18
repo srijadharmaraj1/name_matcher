@@ -1,0 +1,35 @@
+# config_app.yaml — Shared config for both Streamlit and CLI
+
+thresholds:
+  exact: 95
+  high: 80
+  medium: 60
+  low: 40
+  no_match: 0
+  llm_band_lower: 35
+  llm_band_upper: 90
+
+# Weights must sum to 1.0
+person_weights:
+  exact_token: 0.30
+  fuzzy: 0.25
+  phonetic: 0.25
+  structural: 0.10
+  jaro_winkler: 0.10
+
+entity_weights:
+  exact_token: 0.45
+  fuzzy: 0.30
+  phonetic: 0.10
+  structural: 0.05
+  jaro_winkler: 0.10
+
+matching:
+  max_matches_per_name: 5
+  phonetic_vote_threshold: 1   # out of 3 algorithms must agree (1=any match, 2=majority)
+  initial_match_max_score: 70  # initials alone can never exceed this score
+  blocking_prefix_length: 3
+
+llm:
+  max_tokens: 500
+  temperature: 0

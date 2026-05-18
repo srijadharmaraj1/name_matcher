@@ -1,0 +1,63 @@
+# stopwords.yaml — Entity stop words stripped before core matching
+
+entity:
+  # Legal suffixes
+  - ltd
+  - limited
+  - llc
+  - inc
+  - incorporated
+  - corp
+  - corporation
+  - co
+  - plc
+  - gmbh
+  - ag
+  - sa
+  - sas
+  - srl
+  - bv
+  - nv
+  - oy
+  - ab
+  - as
+  - pte
+  - pvt
+  - private
+  - public
+
+  # Descriptors
+  - group
+  - grp
+  - holding
+  - holdings
+  - international
+  - intl
+  - global
+  - services
+  - solutions
+  - technologies
+  - tech
+  - systems
+  - enterprises
+  - ventures
+  - associates
+  - partners
+  - consulting
+  - management
+  - industries
+  - industry
+  - trading
+  - imports
+  - exports
+  - logistics
+  - trust
+  - foundation
+  - fund
+
+  # Common words
+  - the
+  - and
+  - of
+  - for
+  - "&"

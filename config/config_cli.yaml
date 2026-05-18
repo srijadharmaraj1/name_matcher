@@ -1,0 +1,31 @@
+# config_cli.yaml — Terminal run configuration
+
+data:
+  df1_path: data/list1.csv
+  df2_path: data/list2.csv
+  output_path: output/results.xlsx
+
+# person or entity
+name_type: person
+
+df1_columns:
+  title: null
+  first: first_name
+  middle: middle_name
+  last: last_name
+  suffix: null
+  full: null          # if set, overrides all other columns above
+
+df2_columns:
+  title: null
+  first: fname
+  middle: null
+  last: lname
+  suffix: null
+  full: null          # if set, overrides all other columns above
+
+# For entity type, only 'full' is used — set it for both df1 and df2:
+# df1_columns:
+#   full: company_name
+# df2_columns:
+#   full: entity_name
