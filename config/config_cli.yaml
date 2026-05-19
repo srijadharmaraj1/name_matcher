@@ -29,3 +29,9 @@ df2_columns:
 #   full: company_name
 # df2_columns:
 #   full: entity_name
+
+# Azure LLM — set enabled: true to use LLM for ambiguous pairs
+# model must match a 'name' value in config_app.yaml azure.models list
+azure:
+  enabled: false
+  model: gpt-4o

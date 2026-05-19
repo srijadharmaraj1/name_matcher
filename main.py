@@ -24,7 +24,7 @@ from utils.merger import build_output_dataframes
 from utils.exporter import export_to_excel, ensure_output_dir
 from matcher.assembler import assemble_dataframe, validate_column_map
 from matcher.pipeline import match_unique_names, compute_summary
-from matcher.llm import is_llm_configured
+from matcher.llm import is_llm_configured, get_models_from_config
 
 
 def print_banner():
@@ -119,18 +119,24 @@ def main():
 
     # ── LLM config ────────────────────────────────────────────────────────────
     llm_config = None
-    if is_llm_configured():
-        import os
+    azure_cli = cli_config.get("azure", {})
+    azure_enabled = azure_cli.get("enabled", False)
+
+    if azure_enabled and is_llm_configured():
+        # Resolve selected model from app config
+        models, default_model = get_models_from_config(app_config)
+        model_name = azure_cli.get("model", default_model["name"])
+        selected = next((m for m in models if m["name"] == model_name), default_model)
         llm_config = {
             "enabled": True,
-            "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
-            "api_key": os.getenv("AZURE_OPENAI_API_KEY"),
-            "api_version": os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01"),
-            "deployment": os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o"),
+            "deployment": selected["deployment"],
+            "api_version": selected.get("api_version", "2024-02-01"),
         }
-        print("\n  ✅ Azure LLM configured — ambiguous pairs will be escalated")
+        print(f"\n  ✅ Azure LLM enabled — model: {selected['name']} (preview: {selected.get('preview','')})")
+    elif azure_enabled and not is_llm_configured():
+        print("\n  ⚠️  azure.enabled=true in config but credentials missing in .env — running rule-based only")
     else:
-        print("\n  ⚠️  Azure LLM not configured — rule-based only (set .env to enable)")
+        print("\n  ℹ️  Azure LLM disabled — rule-based only (set azure.enabled: true in config_cli.yaml)")
 
     # ── Run matching ──────────────────────────────────────────────────────────
     weights = get_weights(app_config, name_type)

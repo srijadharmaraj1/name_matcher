@@ -33,3 +33,28 @@ matching:
 llm:
   max_tokens: 500
   temperature: 0
+
+# Azure OpenAI model list — add/remove/update preview dates freely
+# First entry with default: true is auto-selected in Streamlit dropdown
+azure:
+  models:
+    - name: gpt-4o
+      deployment: gpt-4o
+      api_version: "2024-02-01"
+      preview: "2025-02"
+      default: true
+    - name: gpt-4o-mini
+      deployment: gpt-4o-mini
+      api_version: "2024-02-01"
+      preview: "2025-02"
+      default: false
+    - name: gpt-4-turbo
+      deployment: gpt-4-turbo
+      api_version: "2024-02-01"
+      preview: "2025-01"
+      default: false
+    - name: gpt-35-turbo
+      deployment: gpt-35-turbo
+      api_version: "2024-02-01"
+      preview: "2025-01"
+      default: false

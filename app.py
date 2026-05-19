@@ -3,7 +3,6 @@ app.py — Streamlit UI for the Name Matching Tool.
 Pages: Setup → Preview → Results
 """
 
-import io
 import os
 import time
 from pathlib import Path
@@ -15,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / "config" / ".env")
 
 from matcher.assembler import assemble_dataframe, validate_column_map
-from matcher.llm import is_llm_configured
+from matcher.llm import is_llm_configured, get_models_from_config
 from matcher.pipeline import match_unique_names, compute_summary
 from utils.config_loader import load_app_config, get_weights
 from utils.deduper import extract_unique_names
@@ -203,35 +202,51 @@ def page_setup():
 
     # ── Azure LLM settings ─────────────────────────────────────────────────────
     st.markdown("---")
-    st.subheader("4. Azure OpenAI Settings (optional)")
-    st.caption("Leave blank to run rule-based matching only. Ambiguous pairs (35–90 score) will not be escalated.")
+    st.subheader("4. Azure LLM")
 
-    env_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-    env_key = os.getenv("AZURE_OPENAI_API_KEY", "")
-    env_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
-    env_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+    credentials_present = is_llm_configured()
 
-    a1, a2 = st.columns(2)
-    with a1:
-        endpoint = st.text_input("Azure Endpoint", value=env_endpoint, type="default")
-        api_version = st.text_input("API Version", value=env_version)
-    with a2:
-        api_key = st.text_input("API Key", value=env_key, type="password")
-        deployment = st.text_input("Deployment name", value=env_deployment)
+    use_azure = st.toggle(
+        "Use Azure LLM for ambiguous matches",
+        value=False,
+        help="When enabled, name pairs scoring between the two thresholds are escalated to Azure OpenAI. Credentials are read from config/.env",
+    )
 
-    llm_enabled = bool(endpoint and api_key)
-    if llm_enabled:
-        st.success("✅ Azure LLM configured — ambiguous pairs will be escalated to AI")
+    if use_azure:
+        if not credentials_present:
+            st.error(
+                "Azure credentials not found in config/.env — "
+                "set AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, and AZURE_OPENAI_ENDPOINT."
+            )
+            use_azure = False
+        else:
+            models, default_model = get_models_from_config(config)
+            model_options = [m["name"] for m in models]
+            default_index = next(
+                (i for i, m in enumerate(models) if m.get("default")), 0
+            )
+            selected_name = st.selectbox(
+                "Model",
+                options=model_options,
+                index=default_index,
+                help="Models and preview dates are managed in config/config_app.yaml",
+            )
+            selected_model = next(m for m in models if m["name"] == selected_name)
+            st.caption(
+                f"Deployment: `{selected_model['deployment']}` — "
+                f"Preview: `{selected_model.get('preview', 'n/a')}` — "
+                f"API version: `{selected_model.get('api_version', 'n/a')}`"
+            )
+            st.success("✅ Azure LLM ready — ambiguous pairs will be escalated")
+
+            st.session_state["llm_config"] = {
+                "enabled": True,
+                "deployment": selected_model["deployment"],
+                "api_version": selected_model.get("api_version", "2024-02-01"),
+            }
     else:
-        st.info("ℹ️ No Azure credentials — rule-based matching only")
-
-    st.session_state["llm_config"] = {
-        "enabled": llm_enabled,
-        "endpoint": endpoint,
-        "api_key": api_key,
-        "api_version": api_version,
-        "deployment": deployment,
-    }
+        st.info("ℹ️ Running rule-based matching only — toggle on to enable Azure LLM")
+        st.session_state["llm_config"] = {"enabled": False}
 
     # ── Proceed button ─────────────────────────────────────────────────────────
     st.markdown("---")
@@ -325,7 +340,6 @@ def _run_matching():
     unique_b = extract_unique_names(df2)
 
     progress_bar = st.progress(0, text="Initializing...")
-    status = st.empty()
 
     def progress_callback(current, total):
         pct = current / total

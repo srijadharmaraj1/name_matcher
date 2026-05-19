@@ -64,8 +64,6 @@ def match_pair(
             signals=result["signals"],
             rule_score=result["score"],
             deployment=llm_config.get("deployment"),
-            endpoint=llm_config.get("endpoint"),
-            api_key=llm_config.get("api_key"),
             api_version=llm_config.get("api_version"),
             max_tokens=config.get("llm", {}).get("max_tokens", 500),
             temperature=config.get("llm", {}).get("temperature", 0),
